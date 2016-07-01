@@ -15,7 +15,6 @@
  */
 package com.github.byhalovie.reportgenerator;
 
-import com.github.byhalovie.reportgenerator.exceptions.ReportGeneratorException;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;

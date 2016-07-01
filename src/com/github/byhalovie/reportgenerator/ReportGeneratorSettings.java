@@ -15,7 +15,6 @@
  */
 package com.github.byhalovie.reportgenerator;
 
-import com.github.byhalovie.reportgenerator.exceptions.ReportGeneratorException;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -58,7 +57,8 @@ public final class ReportGeneratorSettings {
             //  Готовим файл к открытию
             File inputFile = new File(settingsPath);
 
-            //  Инициализируемм Dom parser
+            // 
+            //  инициализируем Dom parser
             DocumentBuilder dBuilder = DocumentBuilderFactory
                     .newInstance().newDocumentBuilder();
             Document document = dBuilder.parse(inputFile);

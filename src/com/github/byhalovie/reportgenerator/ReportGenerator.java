@@ -15,7 +15,6 @@
  */
 package com.github.byhalovie.reportgenerator;
 
-import com.github.byhalovie.reportgenerator.exceptions.ReportGeneratorException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -74,7 +73,7 @@ public final class ReportGenerator {
                     delimitedTokensList.add(completedWord);
                     // Записать разделитель
                     delimitedTokensList.add(stringCurrentChar);
-                    // И поменять флаг слова
+
                     readingWord = false;
 
                 } else {

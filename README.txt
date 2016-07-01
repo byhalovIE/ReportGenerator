@@ -42,8 +42,25 @@
 Задание реализовано с помощью IDE NetBeans 8.0.2 на платформе jdk1.7.0_80. 
 Каталог ReportGenerator - кореновой для проекта
 
-При запуске из командной строки из корня каталога ReportGenerator использовать команду вида
-java -jar dist\ReportGenerator.jar settings.xml source-data.tsv report.txt
+Возможно два способа запуска
+
+--Через Ant
+Для сборки проекта нужно выполнить команду 
+    ant jar
+Для выполнения с файлами ввода/вывода по умолчанию
+    ant run
+Для выполнения со своими файлами
+    java -jar dist\ReportGenerator.jar settings.xml source-data.tsv report.txt
+где
+	settings.xml 	-	файл настроек
+	source-data.tsv -	файл исходных данных
+	report.txt	-	файл в который будет записан/перезаписан итоговый отчет.
+
+--Через Java
+Для сборки проекта нужно выполнить команду
+    javac -d classes -cp classes src\com\github\byhalovie\reportgenerator\*.java -extdirs dist\lib
+Для выполнения скомпилированных class файлов
+    java -classpath classes;dist\lib\univocity-parsers-2.1.2.jar com.github.byhalovie.reportgenerator.Main settings.xml source-data.tsv report.txt
 где
 	settings.xml 	-	файл настроек
 	source-data.tsv -	файл исходных данных

@@ -15,7 +15,6 @@
  */
 package com.github.byhalovie.reportgenerator;
 
-import com.github.byhalovie.reportgenerator.exceptions.ReportGeneratorException;
 import com.univocity.parsers.tsv.TsvParser;
 import com.univocity.parsers.tsv.TsvParserSettings;
 import java.io.File;
