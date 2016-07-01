@@ -35,19 +35,28 @@ import org.xml.sax.SAXException;
  *
  * @author byhalovIE
  */
-public class ReportGeneratorSettings {
+public final class ReportGeneratorSettings {
 
-    int pageWidth;
-    int pageHeight;
+    //<editor-fold defaultstate="collapsed" desc="private fields">
+    private int pageWidth;
+    private int pageHeight;
 
-    List<Column> columnsList;
+    private List<Column> columnsList;
 
-    void readXmlFile(String pathname) throws ReportGeneratorException {
+    private final String newLineCode = "\r\n";
+    private final String verticalSeparator = "|";
+    private final String horizontalSeparator = "-";
+    private final String pageSeparator = "~";
+    private final String separator;
+    //</editor-fold>
+
+    public ReportGeneratorSettings(String settingsPath)
+            throws ReportGeneratorException {
 
         try {
 
             //  Готовим файл к открытию
-            File inputFile = new File(pathname);
+            File inputFile = new File(settingsPath);
 
             //  Инициализируемм Dom parser
             DocumentBuilder dBuilder = DocumentBuilderFactory
@@ -82,24 +91,89 @@ public class ReportGeneratorSettings {
         } catch (ParserConfigurationException | SAXException | IOException |
                 DOMException | NumberFormatException exception) {
             throw new ReportGeneratorException(
-                    "Error reading settings XML file:\n" + pathname,
+                    "Error reading settings XML file:\n" + settingsPath,
                     exception
             );
         }
+
+        separator = String.format("%1$-" + pageWidth + "s", "")
+                .replaceAll(" ", horizontalSeparator) + newLineCode;
     }
 
-    class Column {
+    //<editor-fold defaultstate="collapsed" desc="Accessors">
+    /**
+     * @return the pageWidth
+     */
+    public int getPageWidth() {
+        return pageWidth;
+    }
 
-        String title;
-        int width;
+    /**
+     * @return the pageHeight
+     */
+    public int getPageHeight() {
+        return pageHeight;
+    }
+
+    /**
+     * @return the newLineCode
+     */
+    public String getNewLineCode() {
+        return newLineCode;
+    }
+
+    /**
+     * @return the verticalSeparator
+     */
+    public String getVerticalSeparator() {
+        return verticalSeparator;
+    }
+
+    /**
+     * @return the horizontalSeparator
+     */
+    public String getHorizontalSeparator() {
+        return horizontalSeparator;
+    }
+
+    /**
+     * @return the pageSeparator
+     */
+    public String getPageSeparator() {
+        return pageSeparator;
+    }
+
+    /**
+     * @return the columnsList
+     */
+    public List<Column> getColumnsList() {
+        return columnsList;
+    }
+
+    /**
+     * @return the separator
+     */
+    public String getSeparator() {
+        return separator;
+    }
+    //</editor-fold>
+
+    final class Column {
+
+        private final String title;
+        private final int width;
 
         public Column(String title, int width) {
             this.title = title;
             this.width = width;
         }
 
-        public Column() {
+        public String getTitle() {
+            return title;
         }
 
+        public int getWidth() {
+            return width;
+        }
     }
 }

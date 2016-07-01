@@ -25,8 +25,6 @@ public class ReportRow {
     String text;
     int height;
 
-    public ReportRow() {
-    }
 
     public ReportRow(String head, int height) {
         this.text = head;

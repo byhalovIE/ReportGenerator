@@ -37,18 +37,19 @@ public class Main {
      */
     public static void main(String[] args) {
 
+        if (args.length != 3) {
+            System.out.println("Incorrect number of arguments");
+        }
+
+        String settingsPath = args[0];
+        String sourceDataPath = args[1];
+        String reportPath = args[2];
+
         PrintWriter printWriter = null;
-
         try {
-            if (args.length != 3) {
-                throw new ReportGeneratorException("Incorrect number of arguments");
-            }
 
-            String settingsPath = args[0];
-            String sourceDataPath = args[1];
-            String reportPath = args[2];
-
-            ReportGenerator reportGenerator = new ReportGenerator(settingsPath, sourceDataPath);
+            String generatedReport = ReportGenerator
+                    .generateReport(sourceDataPath, settingsPath);
 
             File reportFile = new File(reportPath);
             if (!reportFile.exists()) {
@@ -56,8 +57,8 @@ public class Main {
             }
             printWriter = new PrintWriter(reportFile, "UTF-16");
 
-            System.out.println(reportGenerator.getGeneratedReport());
-            printWriter.write(reportGenerator.getGeneratedReport());
+            System.out.println(generatedReport);
+            printWriter.write(generatedReport);
 
         } catch (ReportGeneratorException | IOException ex) {
 
@@ -70,5 +71,4 @@ public class Main {
             }
         }
     }
-
 }

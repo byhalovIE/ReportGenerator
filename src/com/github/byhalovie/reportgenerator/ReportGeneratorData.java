@@ -27,15 +27,15 @@ import java.util.List;
  *
  * @author byhalovIE
  */
-public class ReportGeneratorData {
+public final class ReportGeneratorData {
 
     private List<String[]> allRows;
     private final String encoding = "UTF-16";
 
-    public void readTsvFile(String pathname) throws ReportGeneratorException {
+    public ReportGeneratorData(String tsvPath) throws ReportGeneratorException {
 
         try {
-            File file = new File(pathname);
+            File file = new File(tsvPath);
 
             TsvParserSettings settings = new TsvParserSettings();
 
@@ -46,7 +46,7 @@ public class ReportGeneratorData {
         } catch (Exception exception) {
 
             throw new ReportGeneratorException(
-                    "Error reading data tsv file\n" + pathname,
+                    "Error reading data tsv file\n" + tsvPath,
                     exception
             );
         }

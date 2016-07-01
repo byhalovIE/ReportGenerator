@@ -30,21 +30,9 @@ import java.util.logging.Logger;
  *
  * @author byhalovIE
  */
-public class ReportGenerator {
+public final class ReportGenerator {
 
-    //  Значения по умолчанию
-    private String settingsPathName = "settings.xml";
-    private String sourceDataPathName = "source-data.tsv";
-
-    private final String newLineCode = "\r\n";
-    private final String verticalSeparator = "|";
-    private final String horizontalSeparator = "-";
-    private final String pageSeparator = "~";
-    private String separator;
-
-    private ReportGeneratorSettings settings;
-    private ReportGeneratorData data;
-
+    //<editor-fold defaultstate="collapsed" desc="Private Static Methods">
     /**
      * Возвращает список токенов. Токен := "слово из цифр и/или букв" |
      * "символ-разделитель"
@@ -59,41 +47,46 @@ public class ReportGenerator {
 
         int currentWordStartPosition = 0;
         boolean readingWord = false;
-        int i = 0;
-        for (; i < field.length(); i++) {
 
+        int lastIteration = 0;
+
+        for (int i = 0; i < field.length(); i++) {
+            lastIteration = i;
             char currentChar = field.charAt(i);
 
-            if (Character.isAlphabetic(currentChar) || Character.isDigit(currentChar)) {
+            if (Character.isAlphabetic(currentChar)
+                    || Character.isDigit(currentChar)) {
 
                 //  Если текущий символ относится к слову и слово только началось
-                if (!readingWord) {
+                if (readingWord == false) {
                     readingWord = true;
                     currentWordStartPosition = i;
                 }
             } else {
+                String stringCurrentChar = Character.toString(currentChar);
 
                 //  Если текущий символ не принадлежит слову 
                 //  т.е. является разделителем
                 if (readingWord) {
 
+                    String completedWord = field.substring(currentWordStartPosition, i);
                     // Если чистали слово, то записать все слово целиком
-                    delimitedTokensList.add(field.substring(currentWordStartPosition, i));
+                    delimitedTokensList.add(completedWord);
                     // Записать разделитель
-                    delimitedTokensList.add("" + currentChar);
+                    delimitedTokensList.add(stringCurrentChar);
                     // И поменять флаг слова
                     readingWord = false;
 
                 } else {
 
                     // А если нет, то просто записать разделитель
-                    delimitedTokensList.add("" + currentChar);
+                    delimitedTokensList.add(stringCurrentChar);
                 }
             }
         }
 
         if (readingWord) {
-            delimitedTokensList.add(field.substring(currentWordStartPosition, i));
+            delimitedTokensList.add(field.substring(currentWordStartPosition, lastIteration + 1));
         }
 
         return delimitedTokensList;
@@ -191,9 +184,9 @@ public class ReportGenerator {
      * @return
      * @throws ReportGeneratorException
      */
-    private ReportRow generateRow(List<String> fields) throws ReportGeneratorException {
+    private static ReportRow generateRow(List<String> fields, ReportGeneratorSettings settings) throws ReportGeneratorException {
 
-        if (fields.size() != settings.columnsList.size()) {
+        if (fields.size() != settings.getColumnsList().size()) {
             throw new ReportGeneratorException(
                     "The number of fields in a row doesn't match to the number of columns."
             );
@@ -203,9 +196,9 @@ public class ReportGenerator {
 
         //  Форматируем поле по ширине столбца
         Iterator<String> fieldsIterator = fields.iterator();
-        for (ReportGeneratorSettings.Column column : settings.columnsList) {
+        for (ReportGeneratorSettings.Column column : settings.getColumnsList()) {
             String field = fieldsIterator.next();
-            row.add(ReportGenerator.formatFieldToWidth(field, column.width));
+            row.add(ReportGenerator.formatFieldToWidth(field, column.getWidth()));
         }
 
         //  Вычисляем максимальную высоту поля в строке
@@ -225,35 +218,34 @@ public class ReportGenerator {
         //  разделителей
         String rowValue = "";
         for (int i = 0; i < row.get(0).size(); i++) {
-            rowValue = rowValue + verticalSeparator;
+            rowValue = rowValue + settings.getVerticalSeparator();
             for (List<String> headColumn : row) {
-                rowValue = rowValue + " " + headColumn.get(i) + " " + verticalSeparator;
+                rowValue = rowValue + " " + headColumn.get(i) + " " + settings.getVerticalSeparator();
             }
-            rowValue = rowValue + newLineCode;
+            rowValue = rowValue + settings.getNewLineCode();
         }
 
         return new ReportRow(rowValue, maxHeight);
     }
 
-    private ReportRow generateRow(String[] fields) throws ReportGeneratorException {
-        return generateRow(Arrays.asList(fields));
+    private static ReportRow generateRow(String[] fields, ReportGeneratorSettings settings) throws ReportGeneratorException {
+        return generateRow(Arrays.asList(fields), settings);
     }
 
     /**
      * Метод формирует заголовок отчета типа ReportRow.
      *
-     * @return
      * @throws ReportGeneratorException
      */
-    private ReportRow generateHead() throws ReportGeneratorException {
+    private static ReportRow generateHead(ReportGeneratorSettings settings) throws ReportGeneratorException {
 
         List<String> headFields = new ArrayList<>();
-        for (ReportGeneratorSettings.Column column : settings.columnsList) {
-            headFields.add(column.title);
+        for (ReportGeneratorSettings.Column column : settings.getColumnsList()) {
+            headFields.add(column.getTitle());
         }
 
-        ReportRow headRow = generateRow(headFields);
-        headRow.text = headRow.text + separator;
+        ReportRow headRow = generateRow(headFields, settings);
+        headRow.text = headRow.text + settings.getSeparator();
         headRow.height = headRow.height + 1;
 
         return headRow;
@@ -265,11 +257,12 @@ public class ReportGenerator {
      * @throws
      * com.github.byhalovie.reportgenerator.exceptions.ReportGeneratorException
      */
-    private List<String> getPagesList() throws ReportGeneratorException {
+    private static List<String> getPagesList(ReportGeneratorSettings settings, ReportGeneratorData data) throws ReportGeneratorException {
 
-        ReportRow head = generateHead();
+        //  Формируем заголовок
+        ReportRow head = generateHead(settings);
 
-        int realPageHeight = settings.pageHeight - head.height;
+        int realPageHeight = settings.getPageHeight() - head.height;
 
         if (realPageHeight <= 0) {
             throw new ReportGeneratorException("Page height too small.");
@@ -279,22 +272,22 @@ public class ReportGenerator {
         List<ReportRow> rowsList = new ArrayList<>();
 
         for (String[] row : data.getData()) {
-            rowsList.add(generateRow(row));
+            rowsList.add(generateRow(row, settings));
         }
 
+        //<editor-fold defaultstate="collapsed" desc="Формирование страниц из строк">
         List<String> pagesList = new ArrayList<>();
 
         ReportRow currentPage = new ReportRow(head.text, head.height);
 
-        //<editor-fold defaultstate="collapsed" desc="Формирование страниц из строк">
         Iterator<ReportRow> rowsIterator = rowsList.iterator();
         ReportRow row = rowsIterator.next();
         do {
-            if (currentPage.height + row.height + 1 <= settings.pageHeight) {
+            if (currentPage.height + row.height + 1 <= settings.getPageHeight()) {
 
                 //  Если строка помещается на страницу
                 //  то пишем ее на страницу и 
-                currentPage.text = currentPage.text + row.text + separator;
+                currentPage.text = currentPage.text + row.text + settings.getSeparator();
                 currentPage.height = currentPage.height + row.height + 1;
                 if (rowsIterator.hasNext()) {
 
@@ -319,19 +312,19 @@ public class ReportGenerator {
                 //  Если не помещается и текущая страница пуста 
                 //  то дробим строку на части и рассмотрим ситуацию с остатком
                 ReportRow separatableRow
-                        = new ReportRow(row.text + separator, row.height + 1);
+                        = new ReportRow(row.text + settings.getSeparator(), row.height + 1);
 
                 String[] splitedRow = separatableRow.text.split("\n");
 
                 for (int i = 0; i < realPageHeight; i++) {
-                    currentPage.text = currentPage.text + splitedRow[i] + newLineCode;
+                    currentPage.text = currentPage.text + splitedRow[i] + settings.getNewLineCode();
                 }
                 pagesList.add(currentPage.text);
 
                 currentPage = new ReportRow(head.text, head.height);
                 row = new ReportRow("", separatableRow.height - realPageHeight);
                 for (int i = realPageHeight; i < separatableRow.height; i++) {
-                    row.text = row.text + splitedRow[i] + newLineCode;
+                    row.text = row.text + splitedRow[i] + settings.getNewLineCode();
                 }
 
             }
@@ -341,53 +334,37 @@ public class ReportGenerator {
         return pagesList;
 
     }
+    //</editor-fold>
 
+    //<editor-fold defaultstate="collapsed" desc="public static methods">
     /**
      * Возвращает сформированный отчет
      *
-     * @return
+     * @param sourcePath путь к файлу с данными
+     * @param settingsPath путь к файлу с настройками
+     * @return сформированный отчет
      * @throws ReportGeneratorException
      */
-    public String getGeneratedReport() throws ReportGeneratorException {
+    public static String generateReport(String sourcePath, String settingsPath)
+            throws ReportGeneratorException {
+
+        ReportGeneratorSettings settings = new ReportGeneratorSettings(settingsPath);
+
+        ReportGeneratorData data = new ReportGeneratorData(sourcePath);
 
         String report;
-        List<String> pagesList = getPagesList();
+        List<String> pagesList = getPagesList(settings, data);
+
         //  Заполняем итоговый отчет страницами попутно проставляя разделители 
         //  страниц
         Iterator<String> pagesIterator = pagesList.iterator();
         report = pagesIterator.next();
         while (pagesIterator.hasNext()) {
-
-            report = report + pageSeparator + newLineCode + pagesIterator.next();
+            report = report + settings.getPageSeparator()
+                    + settings.getNewLineCode() + pagesIterator.next();
         }
 
         return report;
     }
-
-    public ReportGenerator() {
-        init();
-    }
-
-    public ReportGenerator(String settingsPathName, String sourceDataPathName) {
-        this.settingsPathName = settingsPathName;
-        this.sourceDataPathName = sourceDataPathName;
-
-        init();
-    }
-
-    private void init() {
-        try {
-            settings = new ReportGeneratorSettings();
-            settings.readXmlFile(settingsPathName);
-
-            data = new ReportGeneratorData();
-            data.readTsvFile(sourceDataPathName);
-
-            separator = String.format("%1$-" + settings.pageWidth + "s", "")
-                    .replaceAll(" ", horizontalSeparator) + newLineCode;
-
-        } catch (Exception ex) {
-            Logger.getLogger(ReportGenerator.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
+    //</editor-fold>
 }
